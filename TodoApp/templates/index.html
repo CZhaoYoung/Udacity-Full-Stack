@@ -6,6 +6,10 @@
 </head>
 
 <body>
+    <form method="post" action="/todos/create">
+        <input type="text" name="description" />
+        <input type="submit" value="Create" />
+    </form>
     <ui>
         {% for d in data %}
         <li> {{d.description}} </li>
