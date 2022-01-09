@@ -1,5 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+
+# App version 1.1
+# Modify the app by using AJAX to send data to flask
+# Here, we will use fetch instead on the cline side.
+import sys
+from flask import Flask, render_template, request, redirect, url_for, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = \
@@ -19,13 +25,38 @@ class Todo(db.Model):
 db.create_all()
 
 
-@app.route('/todos/create', methods=['POST'])
+# @app.route('/todos/create', methods=['POST'])
+# def create_todo():
+#     description = request.get_json()['description']
+#     todo = Todo(description=description)
+#     db.session.add(todo)
+#     db.session.commit()
+#     return jsonify({
+#         'description': todo.description
+#     })
+
+# Ues sessions in controllers
+# try...expect...finally
+@app.route('/todos/create', method=['POST'])
 def create_todo():
-    description = request.form.get('description', '')
-    todo = Todo(description=description)
-    db.session.add(todo)
-    db.session.commit()
-    return redirect(url_for('index'))
+    error = False
+    body = {}
+    try:
+        description = request.get_json()['description']
+        todo = Todo(description=description)
+        db.session.add(todo)
+        db.session.commit()
+        body['description'] = todo.description
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if error:
+        abort (400)
+    else:
+        return jsonify(body)
 
 
 @app.route('/')
